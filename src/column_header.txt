@@ -1,0 +1,31 @@
+Profiles_HostTime_start (s)
+Profiles_Velocity_X (m/s)
+Profiles_Velocity_Y (m/s)
+Profiles_Velocity_Z1 (m/s)
+Profiles_Velocity_Z2 (m/s)
+Profiles_Velocity_Range (m)
+Profiles_Correlation_Beam_1 (%)
+Profiles_Correlation_Beam_2 (%)
+Profiles_Correlation_Beam_3 (%)
+Profiles_Correlation_Beam_4 (%)
+Profiles_Correlation_Range (m)
+Profiles_Amplitude_Beam_1 (dB)
+Profiles_Amplitude_Beam_2 (dB)
+Profiles_Amplitude_Beam_3 (dB)
+Profiles_Amplitude_Beam_4 (dB)
+Profiles_Amplitude_Range (m)
+Profiles_SNR_Beam_1 (dB)
+Profiles_SNR_Beam_2 (dB)
+Profiles_SNR_Beam_3 (dB)
+Profiles_SNR_Beam_4 (dB)
+Profiles_SNR_Range (m)
+Profiles_Data_Quality_Beam_1
+Profiles_Data_Quality_Beam_2
+Profiles_Data_Quality_Beam_3
+Profiles_Data_Quality_Beam_4
+Profiles_Data_Quality_Range (m)
+Profiles_TimeStamp (s)
+Profiles_Status
+Profiles_SpeedOfSound (m/s)
+Profiles_Temperature (C)
+Profiles_AveragedPingPairs
