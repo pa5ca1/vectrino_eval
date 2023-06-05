@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
+import matplotlib.pyplot as plt
 
 # For timing
 from datetime import datetime
@@ -111,8 +112,22 @@ for file_sample_name in file_list:
     elif save_format == 'h5':
         output_destination = output_destination + '.h5'
         df.to_hdf(output_destination,key='df')
-
     else:
         None
+
+
+    # Analysing data
+    # Select only feasible points under sensor
+    list_selected_points = [2,3,4]
+    select = df.columns.get_level_values(1).isin(list_selected_points)
+    df_analyse = df.loc[:, select]
+    x_mean_velocity = df_analyse.Profiles_Velocity_X.mean(axis=1).to_numpy()
+    y_mean_velocity = df_analyse.Profiles_Velocity_Y.mean(axis=1).to_numpy()
+    z1_mean_velocity = df_analyse.Profiles_Velocity_Z1.mean(axis=1).to_numpy()
+    z2_mean_velocity = df_analyse.Profiles_Velocity_Z2.mean(axis=1).to_numpy()
+
+    plt.hist(x_mean_velocity)
+    plt.show()
+
 
 print(datetime.now() - startTime)
