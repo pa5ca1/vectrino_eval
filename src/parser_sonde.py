@@ -1,11 +1,15 @@
 import numpy as np
 import pandas as pd
 import os
-import matplotlib.pyplot as plt
+
+# for saving files
+from saving_data import saving_files
+from analyse_data import plot_histogram_delta_t
+from analyse_data import adding_meassurement_label
 
 # For timing
 from datetime import datetime
-startTime = datetime.now()
+
 
 # get current working directory
 cwd = os.getcwd()
@@ -24,48 +28,58 @@ load_all = True
 sample_data_folder_path = cwd + '/../sample_data/'
 # only use if one specific file should be used
 file_name = 'VectrinoData.144.23.Vectrino Profiler.00006.dat'
-
 if load_all:
     files = os.listdir(sample_data_folder_path)
-    file_list = [file for file in files if file.endswith('.dat')]
+    list_of_all_files = [file for file in files if file.endswith('.dat')]
 else:
-    file_list = [file_name]
+    list_of_all_files = [file_name]
+# Sorting the files alphabetically
+list_of_all_files.sort()
+# Number of all datapoints
+n_datapoints = len(list_of_all_files)
 
-# Define the line_names to extract
+
+## Define saving format
+save_format = 'csv'
+bool_save = False
+
+## Define the line_names to extract
 lines_to_extract = ['Profiles_Velocity_X','Profiles_Velocity_Y',
                     'Profiles_Velocity_Z1','Profiles_Velocity_Z2',
                     'Profiles_HostTime_start']
+# Number of sample points per direction
+n_sample_depth = 7
 
 column_dict = {'Profiles_HostTime_start':1,
-               'Profiles_Velocity_X':8,
-               'Profiles_Velocity_Y':8,
-               'Profiles_Velocity_Z1':8,
-               'Profiles_Velocity_Z2':8}
+               'Profiles_Velocity_X':n_sample_depth,
+               'Profiles_Velocity_Y':n_sample_depth,
+               'Profiles_Velocity_Z1':n_sample_depth,
+               'Profiles_Velocity_Z2':n_sample_depth}
 
+# How to name the columns in pandas dataframe
 main_column = [key for key, value in column_dict.items() for _ in range(value)]
 sub_column = []
 for key, value in column_dict.items():
     sub_column.extend(list(range(1, value + 1)))
-
-# How to name the columns in pandas dataframe
 column_headers = [np.array(main_column),np.array(sub_column)]
 
-# Define saving format
-save_format = 'csv'
+exp_list = []
 
-for file_sample_name in file_list:
+for i,file_sample_name in enumerate(list_of_all_files):
+    print('Sampling: ' + str(i+1) +' of ' + str(n_datapoints) + ' | Name: ' + file_sample_name)
     # Choosing the correct file
     file_sample = cwd + '/../sample_data/' + file_sample_name
-    # We delete the .dat at the end and put everything else together
+    # We delete the string '.dat' at the end and put everything else together
     output_filename = os.path.splitext(file_sample_name)[0]
 
     # extract lines from sample file
     with open(file_sample) as f:
         lines = [line for line in f]
 
-    #df = pd.DataFrame(columns=headers)
+    # Saving each column in a list
     mem_list = []
-    big_list = []
+    # List to append mem_list to store it in one pandas dataframe
+    file_list = []
 
     for line in lines:
     # Each line consits of two parts: First a name and second the value, seperated by colon
@@ -97,37 +111,36 @@ for file_sample_name in file_list:
             
 
         if column_name == 'Profiles_AveragedPingPairs':
-            big_list.append(mem_list)
+            file_list.append(mem_list)
             mem_list = []
 
+    exp_list.append(file_list)
+    #
 
-    df = pd.DataFrame(big_list,columns=column_headers)
-    #df.to_csv(output_destination)
+    # Making one big array for pandas dataframe
+complete_data_array = np.concatenate(exp_list)
+df = pd.DataFrame(complete_data_array,columns=column_headers)
 
-    # Saving results
-    output_destination = sample_data_folder_path + save_format + '/' + output_filename
-    if save_format == 'csv':
-        output_destination = output_destination + '.csv'
-        df.to_csv(output_destination)
-    elif save_format == 'h5':
-        output_destination = output_destination + '.h5'
-        df.to_hdf(output_destination,key='df')
-    else:
-        None
+# Saving results
+if bool_save:
+    saving_files(df,sample_data_folder_path,save_format,output_filename)
 
 
-    # Analysing data
-    # Select only feasible points under sensor
-    list_selected_points = [2,3,4]
-    select = df.columns.get_level_values(1).isin(list_selected_points)
-    df_analyse = df.loc[:, select]
-    x_mean_velocity = df_analyse.Profiles_Velocity_X.mean(axis=1).to_numpy()
-    y_mean_velocity = df_analyse.Profiles_Velocity_Y.mean(axis=1).to_numpy()
-    z1_mean_velocity = df_analyse.Profiles_Velocity_Z1.mean(axis=1).to_numpy()
-    z2_mean_velocity = df_analyse.Profiles_Velocity_Z2.mean(axis=1).to_numpy()
+adding_meassurement_label(df,n_datapoints)
 
-    plt.hist(x_mean_velocity)
-    plt.show()
+## General Plots
+plot_histogram_delta_t(df)
 
+# Analysing data
+# Select only feasible points under sensor
+list_selected_points = [2,3,4]
+select = df.columns.get_level_values(1).isin(list_selected_points)
+df_analyse = df.loc[:, select]
+x_mean_velocity = df_analyse.Profiles_Velocity_X.mean(axis=1).to_numpy()
+y_mean_velocity = df_analyse.Profiles_Velocity_Y.mean(axis=1).to_numpy()
+z1_mean_velocity = df_analyse.Profiles_Velocity_Z1.mean(axis=1).to_numpy()
+z2_mean_velocity = df_analyse.Profiles_Velocity_Z2.mean(axis=1).to_numpy()
+plt.hist(x_mean_velocity)
+plt.show()
 
 print(datetime.now() - startTime)
