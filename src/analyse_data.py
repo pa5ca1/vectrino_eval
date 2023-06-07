@@ -19,13 +19,21 @@ def adding_meassurement_label(df,n_datapoints):
     end_time = df.Profiles_HostTime_start.max()
     start_time = df.Profiles_HostTime_start.min()
     t_per_datapoint = (end_time-start_time)/n_datapoints
+    # In list_periods must be the start and end times of each sample point
+    # sampling time.
+    # Example: [t_0, t_1, t_2, t_3, ..., t_n] with t_1 < t_2 < t_3 ... t_n
+    # and t_n = end_time
     list_periods = [start_time+i*t_per_datapoint for i in range(n_datapoints+1)]
-
-    df['label'] = df['Profiles_HostTime_start'].iloc[0].apply(get_label,l=list_periods)
+    # We use .squezze to change from pandas dataframe to timeseries
+    # because 'get_label' needs a timeseries
+    df['label'] = df['Profiles_HostTime_start'].squeeze().apply(get_label,l=list_periods)
 
 
 def get_label(timestamp,**kwargs):
-    label_list = kwargs['l']
+    ''' Labeling each '''
+    
+    label_list = kwargs.get('l', None)
+
     for i in range(len(label_list)-1):
         if label_list[i] <= timestamp < label_list[i+1]:
             return chr(65 + i)  # Convert to corresponding label ('A', 'B', 'C', ...)
