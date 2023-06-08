@@ -5,7 +5,7 @@ import os
 # for saving files
 from saving_data import saving_files
 from analyse_data import plot_histogram_delta_t
-from analyse_data import adding_meassurement_label
+from analyse_data import adding_measurement_label
 
 # For timing
 from datetime import datetime
@@ -125,22 +125,34 @@ df = pd.DataFrame(complete_data_array,columns=column_headers)
 if bool_save:
     saving_files(df,sample_data_folder_path,save_format,output_filename)
 
+# Adding labels for each measurement
+df = adding_measurement_label(df,n_datapoints)
 
-adding_meassurement_label(df,n_datapoints)
-
-## General Plots
-plot_histogram_delta_t(df)
-
+# Analyze data: min, max, mean
 # Analysing data
 # Select only feasible points under sensor
 list_selected_points = [2,3,4]
 select = df.columns.get_level_values(1).isin(list_selected_points)
+# We want to keep the column 'label'
+select[-1] = True
 df_analyse = df.loc[:, select]
-x_mean_velocity = df_analyse.Profiles_Velocity_X.mean(axis=1).to_numpy()
-y_mean_velocity = df_analyse.Profiles_Velocity_Y.mean(axis=1).to_numpy()
-z1_mean_velocity = df_analyse.Profiles_Velocity_Z1.mean(axis=1).to_numpy()
-z2_mean_velocity = df_analyse.Profiles_Velocity_Z2.mean(axis=1).to_numpy()
-plt.hist(x_mean_velocity)
-plt.show()
+
+
+df_analyse = pd.DataFrame(columns=column_headers,index=['Min','Max','Mean','std'])
+df_analyse.drop(columns='Profiles_HostTime_start')
+
+for label in pd.unique(df_analyse['label']):
+    means = df[df.label == label].mean(numeric_only=True)
+x_mean = means.Profiles_Velocity_X.to_list()
+y_mean = means.Profiles_Velocity_Y.to_list()
+z1_mean = means.Profiles_Velocity_Z1.to_list()
+z2_mean = means.Profiles_Velocity_Z2.to_list()
+# Calculate mean per measurement point
+
+## General Plots
+plot_histogram_delta_t(df)
+
+
+
 
 print(datetime.now() - startTime)
