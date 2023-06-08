@@ -38,7 +38,7 @@ def get_label(timestamp,**kwargs):
     label_list = kwargs.get('l', None)
 
     for i in range(len(label_list)-1):
-        if label_list[i] <= timestamp < label_list[i+1]:
+        if label_list[i] <= timestamp <= label_list[i+1]:
             return chr(65 + i)  # Convert to corresponding label ('A', 'B', 'C', ...)
     return 'Test'
 
