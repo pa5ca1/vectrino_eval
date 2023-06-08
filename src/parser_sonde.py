@@ -10,6 +10,15 @@ from analyse_data import adding_measurement_label
 # For timing
 from datetime import datetime
 
+# May delete later
+
+import matplotlib
+import matplotlib.pyplot as plt
+#font = {'family' : 'normal',
+#        'weight' : 'bold',
+#        'size'   : 22}
+#matplotlib.rc('font', **font)
+matplotlib.rcParams.update({'font.size': 22})
 
 # get current working directory
 cwd = os.getcwd()
@@ -35,6 +44,7 @@ else:
     list_of_all_files = [file_name]
 # Sorting the files alphabetically
 list_of_all_files.sort()
+list_of_all_files = list_of_all_files[:-1]
 # Number of all datapoints
 n_datapoints = len(list_of_all_files)
 
@@ -131,22 +141,53 @@ df = adding_measurement_label(df,n_datapoints)
 # Analyze data: min, max, mean
 # Analysing data
 # Select only feasible points under sensor
-list_selected_points = [2,3,4]
+list_selected_points = [2,3]
 select = df.columns.get_level_values(1).isin(list_selected_points)
 # We want to keep the column 'label'
 select[-1] = True
-df_analyse = df.loc[:, select]
+df_select = df.loc[:, select]
 
 
-df_analyse = pd.DataFrame(columns=column_headers,index=['Min','Max','Mean','std'])
-df_analyse.drop(columns='Profiles_HostTime_start')
+#df_analyse = pd.DataFrame(columns=column_headers,index=['Min','Max','Mean','std'])
+#df_analyse.drop(columns='Profiles_HostTime_start')
 
-for label in pd.unique(df_analyse['label']):
-    means = df[df.label == label].mean(numeric_only=True)
-x_mean = means.Profiles_Velocity_X.to_list()
-y_mean = means.Profiles_Velocity_Y.to_list()
-z1_mean = means.Profiles_Velocity_Z1.to_list()
-z2_mean = means.Profiles_Velocity_Z2.to_list()
+df_analyse = pd.DataFrame(columns=['label','mean_val','min_val','max_val','std_val'])
+df_analyse['label'] = df_select.label
+df_analyse['mean_val'] = df_select.Profiles_Velocity_X.mean(axis=1)
+#df_analyse['min_val'] = df_select.Profiles_Velocity_X.min(axis=1)
+#df_analyse['max_val'] = df_select.Profiles_Velocity_X.max(axis=1)
+#df_analyse['std_val'] = df_select.Profiles_Velocity_X.std(axis=1)
+
+
+
+
+fig, axs = plt.subplots(11, 7, sharex = False, sharey = False)
+fig.set_size_inches(26, 18)
+fig.suptitle('mean')
+fig.set_dpi(100)
+fig.tight_layout()
+labels = pd.unique(df_analyse['label'])
+for i,ax in enumerate(axs.reshape(-1)):
+    data = df_analyse[df_analyse['label']==labels[i]]['mean_val'].to_numpy()
+    ax.hist(data,density=False)
+
+mean_matrix = np.zeros(n_datapoints)
+
+for i,label in enumerate(labels):
+    mean_matrix[i] = df_select[df_select['label']==label].Profiles_Velocity_X.to_numpy().reshape(-1).mean()
+
+mean_matrix = mean_matrix.reshape(11,7)
+plt.imshow(mean_matrix.transpose())
+plt.xlabel('x axis')
+plt.ylabel('y axis')
+plt.title('Mean per point in space')
+plt.colorbar()
+
+#means = df[df.label == label].mean(numeric_only=True)
+#x_mean = means.Profiles_Velocity_X.to_list()
+#y_mean = means.Profiles_Velocity_Y.to_list()
+#z1_mean = means.Profiles_Velocity_Z1.to_list()
+#z2_mean = means.Profiles_Velocity_Z2.to_list()
 # Calculate mean per measurement point
 
 ## General Plots
