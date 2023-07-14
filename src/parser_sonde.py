@@ -9,6 +9,7 @@ from analyse_data import adding_measurement_label
 from analyse_data import select_points_in_space
 from analyse_data import plot_histogram_means_in_space
 from analyse_data import plot_mean_in_space
+from analyse_data import select_points_in_time
 # For timing
 from datetime import datetime
 
@@ -150,6 +151,13 @@ df = adding_measurement_label(df,n_datapoints)
 list_selected_points = [2,3]
 
 df_select = select_points_in_space(df,list_selected_points)
+
+# Select relative time point
+# cut 10 second in the front and 20 seconds before end of measurement
+delta_t = [10,20]
+
+df_select = select_points_in_time(df_select,delta_t)
+
 
 labels = pd.unique(df['label'])
 
