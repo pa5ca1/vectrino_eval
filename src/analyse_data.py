@@ -67,10 +67,35 @@ def select_points_in_space(df,list_selected_points):
     select = df.columns.get_level_values(1).isin(list_selected_points)
     # We want to keep the column 'label'
     select[-1] = True
+    # We want to keep timestamps
+    #select[0] = True
     df_select = df.loc[:, select]
+    # We want to keep timestamps
+    df_select['Profiles_HostTime_start'] = df.Profiles_HostTime_start.to_numpy()
+    return df_select
 
 
-
+def select_points_in_time(df,delta_t):
+    '''This function drops the first and last recorded time points
+    of the measurement and returns the new dataframe with only the 'middle' 
+    time points.
+    t_0,t_1   : is dropped
+    t_1,t_2 : stays
+    i_2,t_3 : is dropped
+    '''
+    # Start from the bottom
+    labels = np.flip(df.label.unique())
+    
+    for label in labels:
+        t_0 = df[df.label == label].Profiles_HostTime_start.to_numpy()[0]
+        t_3 =df[df.label == label].Profiles_HostTime_start.to_numpy()[-1]
+        t_1 = t_0 + delta_t[0]
+        t_2 = t_3 - delta_t[1]
+        i_0 = df[(df.Profiles_HostTime_start>=t_0) & (df.Profiles_HostTime_start<t_1)].index
+        i_1 = df[(df.Profiles_HostTime_start>t_2) & (df.Profiles_HostTime_start<=t_3)].index
+        df = df.drop(i_1).drop(i_0)
+        #df_select = df_select[df.label == label].drop(range(0,i_0))
+    return df
 
 def get_label(timestamp,**kwargs):
     ''' Labeling each '''
