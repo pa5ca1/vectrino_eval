@@ -1,7 +1,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-
+import pandas as pd
 
 def plot_histogram_delta_t(df):
     plt.figure(1)
@@ -11,6 +11,37 @@ def plot_histogram_delta_t(df):
     plt.xlabel('Delta t [s]')
     plt.ylabel('log. number of value')
     plt.show()
+
+
+def plot_mean_in_space(df_select,n_datapoints,labels):
+    mean_matrix = np.zeros(n_datapoints)
+
+    for i,label in enumerate(labels):
+        mean_matrix[i] = df_select[df_select['label']==label].Profiles_Velocity_X.to_numpy().reshape(-1).mean()
+
+    mean_matrix = mean_matrix.reshape(11,7)
+    plt.imshow(mean_matrix.transpose())
+    plt.xlabel('x axis')
+    plt.ylabel('y axis')
+    plt.title('Mean per point in space')
+    plt.colorbar()
+
+
+def plot_histogram_means_in_space(df_select,labels):
+
+    df_analyse = pd.DataFrame(columns=['label','mean_val'])
+    df_analyse['label'] = df_select.label
+    df_analyse['mean_val'] = df_select.Profiles_Velocity_X.mean(axis=1)
+    fig, axs = plt.subplots(11, 7, sharex = False, sharey = False)
+    fig.set_size_inches(26, 18)
+    fig.suptitle('mean')
+    fig.set_dpi(100)
+    fig.tight_layout()
+    
+    for i,ax in enumerate(axs.reshape(-1)):
+        data = df_analyse[df_analyse['label']==labels[i]]['mean_val'].to_numpy()
+        ax.hist(data,density=False)
+    
 
 def adding_measurement_label(df,n_datapoints):
     '''Adds a label for each meassurement if a) a sample is taken or b) the traverse is moving.
@@ -30,6 +61,15 @@ def adding_measurement_label(df,n_datapoints):
     df['label'] = df['Profiles_HostTime_start'].squeeze().apply(get_label,l=list_periods)
 
     return df
+
+def select_points_in_space(df,list_selected_points):
+
+    select = df.columns.get_level_values(1).isin(list_selected_points)
+    # We want to keep the column 'label'
+    select[-1] = True
+    df_select = df.loc[:, select]
+
+
 
 
 def get_label(timestamp,**kwargs):

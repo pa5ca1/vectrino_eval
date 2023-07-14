@@ -6,7 +6,9 @@ import os
 from saving_data import saving_files
 from analyse_data import plot_histogram_delta_t
 from analyse_data import adding_measurement_label
-
+from analyse_data import select_points_in_space
+from analyse_data import plot_histogram_means_in_space
+from analyse_data import plot_mean_in_space
 # For timing
 from datetime import datetime
 
@@ -19,6 +21,9 @@ import matplotlib.pyplot as plt
 #        'size'   : 22}
 #matplotlib.rc('font', **font)
 matplotlib.rcParams.update({'font.size': 22})
+
+# Timer start
+internal_timer_start = datetime.now()
 
 # get current working directory
 cwd = os.getcwd()
@@ -140,60 +145,23 @@ df = adding_measurement_label(df,n_datapoints)
 
 # Analyze data: min, max, mean
 # Analysing data
+
 # Select only feasible points under sensor
 list_selected_points = [2,3]
-select = df.columns.get_level_values(1).isin(list_selected_points)
-# We want to keep the column 'label'
-select[-1] = True
-df_select = df.loc[:, select]
 
+df_select = select_points_in_space(df,list_selected_points)
 
-#df_analyse = pd.DataFrame(columns=column_headers,index=['Min','Max','Mean','std'])
-#df_analyse.drop(columns='Profiles_HostTime_start')
-
-df_analyse = pd.DataFrame(columns=['label','mean_val','min_val','max_val','std_val'])
-df_analyse['label'] = df_select.label
-df_analyse['mean_val'] = df_select.Profiles_Velocity_X.mean(axis=1)
-#df_analyse['min_val'] = df_select.Profiles_Velocity_X.min(axis=1)
-#df_analyse['max_val'] = df_select.Profiles_Velocity_X.max(axis=1)
-#df_analyse['std_val'] = df_select.Profiles_Velocity_X.std(axis=1)
+labels = pd.unique(df['label'])
 
 
 
-
-fig, axs = plt.subplots(11, 7, sharex = False, sharey = False)
-fig.set_size_inches(26, 18)
-fig.suptitle('mean')
-fig.set_dpi(100)
-fig.tight_layout()
-labels = pd.unique(df_analyse['label'])
-for i,ax in enumerate(axs.reshape(-1)):
-    data = df_analyse[df_analyse['label']==labels[i]]['mean_val'].to_numpy()
-    ax.hist(data,density=False)
-
-mean_matrix = np.zeros(n_datapoints)
-
-for i,label in enumerate(labels):
-    mean_matrix[i] = df_select[df_select['label']==label].Profiles_Velocity_X.to_numpy().reshape(-1).mean()
-
-mean_matrix = mean_matrix.reshape(11,7)
-plt.imshow(mean_matrix.transpose())
-plt.xlabel('x axis')
-plt.ylabel('y axis')
-plt.title('Mean per point in space')
-plt.colorbar()
-
-#means = df[df.label == label].mean(numeric_only=True)
-#x_mean = means.Profiles_Velocity_X.to_list()
-#y_mean = means.Profiles_Velocity_Y.to_list()
-#z1_mean = means.Profiles_Velocity_Z1.to_list()
-#z2_mean = means.Profiles_Velocity_Z2.to_list()
-# Calculate mean per measurement point
 
 ## General Plots
+
+plot_histogram_means_in_space(df_select,labels)
+
 plot_histogram_delta_t(df)
 
+plot_mean_in_space(df_select,n_datapoints,labels)
 
-
-
-print(datetime.now() - startTime)
+print(datetime.now() - internal_timer_start)
