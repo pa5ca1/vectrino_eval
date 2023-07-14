@@ -14,13 +14,14 @@ def plot_histogram_delta_t(df):
 
 
 def plot_mean_in_space(df_select,n_datapoints,labels):
+    plt.figure()
     mean_matrix = np.zeros(n_datapoints)
 
     for i,label in enumerate(labels):
         mean_matrix[i] = df_select[df_select['label']==label].Profiles_Velocity_X.to_numpy().reshape(-1).mean()
 
     mean_matrix = mean_matrix.reshape(11,7)
-    plt.imshow(mean_matrix.transpose())
+    plt.imshow(mean_matrix.transpose(),cmap=plt.cm.bwr)
     plt.xlabel('x axis')
     plt.ylabel('y axis')
     plt.title('Mean per point in space')
