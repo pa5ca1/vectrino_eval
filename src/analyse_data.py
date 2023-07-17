@@ -27,6 +27,16 @@ def plot_mean_in_space(df_select,n_datapoints,labels):
     plt.title('Mean per point in space')
     plt.colorbar()
 
+def plot_turbulence_intensity_heatmap(df,labels):
+    plot_matrix = df.turb_int.to_numpy().reshape(11,7)
+    plt.figure()
+    plt.imshow(plot_matrix.transpose(),cmap=plt.cm.bwr)
+    plt.xlabel('x axis')
+    plt.ylabel('y axis')
+    plt.title('Turbulence Intensity')
+    plt.colorbar()
+    
+    
 
 def plot_histogram_means_in_space(df_select,labels):
 
@@ -109,5 +119,56 @@ def get_label(timestamp,**kwargs):
     return 'Test'
 
 
+def calculate_turbulence_intensity(df):
+    I = []
+    labels = df.label.unique()
+    for label in labels:
+        u_x = np.abs(df[df.label == label].u_x.to_numpy()[0])
+        u_y = np.abs(df[df.label == label].u_y.to_numpy()[0])
+        u_z = np.abs(df[df.label == label].u_z1.to_numpy()[0])
+        u_hat = np.sqrt(u_x**2 + u_y**2 + u_z**2)
+        u_dash = np.sqrt((u_x+u_y+u_z)/3)
+        I.append(u_dash/u_hat)
+    df['turb_int'] = I
+
+
 def calculate_mean_per_measurement(df):
-    return None
+    u_x = []
+    u_y = []
+    u_z1 = []
+    u_z2 = []
+    std_vel = []
+    t_intervall = []
+    labels = df.label.unique()
+    for label in labels:
+        mean_values = df[df.label == label].mean(numeric_only=True)
+        std_values = df[df.label == label].std(numeric_only=True)
+        u_x.append(mean_values.Profiles_Velocity_X.mean())
+        u_y.append(mean_values.Profiles_Velocity_Y.mean())
+        u_z1.append(mean_values.Profiles_Velocity_Z1.mean())
+        u_z2.append(mean_values.Profiles_Velocity_Z2.mean())
+        t1 = df[df.label == label].Profiles_HostTime_start.iloc[-1]
+        t2 = df[df.label == label].Profiles_HostTime_start.iloc[0]
+        t_intervall.append((t1,t2))
+        x_std = std_values.Profiles_Velocity_X.std()
+        y_std = std_values.Profiles_Velocity_Y.std()
+        z1_std = std_values.Profiles_Velocity_Z1.std()
+        z2_std = std_values.Profiles_Velocity_Z2.std()
+        std_vel.append([x_std,y_std,z1_std,z2_std])
+
+    
+    mean_df = pd.DataFrame()
+    mean_df['u_x'] = u_x
+    mean_df['u_y'] = u_y
+    mean_df['u_z1'] = u_z1
+    mean_df['u_z2'] = u_z2
+    std_vel = np.array(std_vel)
+    mean_df['x_std'] = std_vel[:,0]
+    mean_df['y_std'] = std_vel[:,1]
+    mean_df['z1_std'] = std_vel[:,2]
+    mean_df['z2_std'] = std_vel[:,3]
+    mean_df['time_intervall'] = t_intervall
+    mean_df['label'] = labels
+
+    return mean_df
+
