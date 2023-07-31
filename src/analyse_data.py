@@ -77,13 +77,13 @@ def calculate_turbulence_intensity(df_select,df_mean):
         u_z2_mean = df_mean[df_mean.label == label].u_z2.iloc[0]
 
         u_x = df_select[df_select.label == label].Profiles_Velocity_X.to_numpy().reshape(-1)
-        u_dash_sq_mean_x = np.mean((u_x-u_x_mean)**2)
+        u_dash_sq_mean_x = np.sqrt(np.mean((u_x-u_x_mean)**2))
 
         u_y = df_select[df_select.label == label].Profiles_Velocity_Y.to_numpy().reshape(-1)
-        u_dash_sq_mean_y = np.mean((u_y-u_y_mean)**2)
+        u_dash_sq_mean_y = np.sqrt(np.mean((u_y-u_y_mean)**2))
 
         u_z1 = df_select[df_select.label == label].Profiles_Velocity_Z1.to_numpy().reshape(-1)
-        u_dash_sq_mean_z1 = np.mean((u_z1-u_z1_mean)**2)        
+        u_dash_sq_mean_z1 = np.sqrt(np.mean((u_z1-u_z1_mean)**2))
 
         u_z2 = df_select[df_select.label == label].Profiles_Velocity_Z2.to_numpy().reshape(-1)
         u_dash_sq_mean_z2 = np.mean((u_z2-u_z2_mean)**2)   
