@@ -42,11 +42,11 @@ headers = [head.replace('\n','') for head in headers]
 
 
 ## Load Experiment
-exp_name = 'Pos_0_F45-16-W37-5'
-#exp_name = 'Pos_1_F49-07_W57-1'
+#exp_name = 'Pos_0_F45-16-W37-5'
+exp_name = 'Pos_1_F49-07_W57-1'
 
 df = load_exp(cwd,exp_name)
-list_selected_points = [2,3]
+list_selected_points = [3]
 delta_t = [10,20]
 df_select = cut_data(df,list_selected_points,delta_t)
 df_mean = calculate_mean_per_measurement(df_select)
