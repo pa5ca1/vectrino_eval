@@ -1,58 +1,5 @@
-
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-def plot_histogram_delta_t(df):
-    plt.figure(1)
-    df.iloc[:,0].diff().hist()
-    plt.yscale('log')
-    plt.title('Delta t')
-    plt.xlabel('Delta t [s]')
-    plt.ylabel('log. number of value')
-    plt.show()
-
-
-def plot_mean_in_space(df_select,n_datapoints,labels):
-    plt.figure()
-    mean_matrix = np.zeros(n_datapoints)
-
-    for i,label in enumerate(labels):
-        mean_matrix[i] = df_select[df_select['label']==label].Profiles_Velocity_X.to_numpy().reshape(-1).mean()
-
-    mean_matrix = mean_matrix.reshape(11,7)
-    plt.imshow(mean_matrix.transpose(),cmap=plt.cm.bwr)
-    plt.xlabel('x axis')
-    plt.ylabel('y axis')
-    plt.title('Mean per point in space')
-    plt.colorbar()
-
-def plot_turbulence_intensity_heatmap(df,labels):
-    plot_matrix = df.turb_int.to_numpy().reshape(11,7)
-    plt.figure()
-    plt.imshow(plot_matrix.transpose(),cmap=plt.cm.bwr)
-    plt.xlabel('x axis')
-    plt.ylabel('y axis')
-    plt.title('Turbulence Intensity')
-    plt.colorbar()
-    
-    
-
-def plot_histogram_means_in_space(df_select,labels):
-
-    df_analyse = pd.DataFrame(columns=['label','mean_val'])
-    df_analyse['label'] = df_select.label
-    df_analyse['mean_val'] = df_select.Profiles_Velocity_X.mean(axis=1)
-    fig, axs = plt.subplots(11, 7, sharex = False, sharey = False)
-    fig.set_size_inches(26, 18)
-    fig.suptitle('mean')
-    fig.set_dpi(100)
-    fig.tight_layout()
-    
-    for i,ax in enumerate(axs.reshape(-1)):
-        data = df_analyse[df_analyse['label']==labels[i]]['mean_val'].to_numpy()
-        ax.hist(data,density=False)
-    
 
 def adding_measurement_label(df,n_datapoints):
     '''Adds a label for each meassurement if a) a sample is taken or b) the traverse is moving.
@@ -119,20 +66,37 @@ def get_label(timestamp,**kwargs):
     return 'Test'
 
 
-def calculate_turbulence_intensity(df):
+def calculate_turbulence_intensity(df_select,df_mean):
+
     I = []
-    labels = df.label.unique()
+    labels = df_select.label.unique()
     for label in labels:
-        u_x = np.abs(df[df.label == label].u_x.to_numpy()[0])
-        u_y = np.abs(df[df.label == label].u_y.to_numpy()[0])
-        u_z = np.abs(df[df.label == label].u_z1.to_numpy()[0])
-        u_hat = np.sqrt(u_x**2 + u_y**2 + u_z**2)
-        u_dash = np.sqrt((u_x+u_y+u_z)/3)
+        u_x_mean = df_mean[df_mean.label == label].u_x.iloc[0]
+        u_y_mean = df_mean[df_mean.label == label].u_y.iloc[0]
+        u_z1_mean = df_mean[df_mean.label == label].u_z1.iloc[0]
+        u_z2_mean = df_mean[df_mean.label == label].u_z2.iloc[0]
+
+        u_x = df_select[df_select.label == label].Profiles_Velocity_X.to_numpy().reshape(-1)
+        u_dash_sq_mean_x = np.mean((u_x-u_x_mean)**2)
+
+        u_y = df_select[df_select.label == label].Profiles_Velocity_Y.to_numpy().reshape(-1)
+        u_dash_sq_mean_y = np.mean((u_y-u_y_mean)**2)
+
+        u_z1 = df_select[df_select.label == label].Profiles_Velocity_Z1.to_numpy().reshape(-1)
+        u_dash_sq_mean_z1 = np.mean((u_z1-u_z1_mean)**2)        
+
+        u_z2 = df_select[df_select.label == label].Profiles_Velocity_Z2.to_numpy().reshape(-1)
+        u_dash_sq_mean_z2 = np.mean((u_z2-u_z2_mean)**2)   
+
+        u_dash = np.sqrt((u_dash_sq_mean_x + u_dash_sq_mean_y + u_dash_sq_mean_z1)/3)
+        u_hat = np.sqrt(u_x_mean**2 + u_y_mean**2 + u_z1_mean**2)
+        
         I.append(u_dash/u_hat)
-    df['turb_int'] = I
+    df_mean['turb_int'] = I
 
 
 def calculate_mean_per_measurement(df):
+
     u_x = []
     u_y = []
     u_z1 = []
@@ -140,6 +104,8 @@ def calculate_mean_per_measurement(df):
     std_vel = []
     t_intervall = []
     labels = df.label.unique()
+
+
     for label in labels:
         mean_values = df[df.label == label].mean(numeric_only=True)
         std_values = df[df.label == label].std(numeric_only=True)
@@ -149,7 +115,7 @@ def calculate_mean_per_measurement(df):
         u_z2.append(mean_values.Profiles_Velocity_Z2.mean())
         t1 = df[df.label == label].Profiles_HostTime_start.iloc[-1]
         t2 = df[df.label == label].Profiles_HostTime_start.iloc[0]
-        t_intervall.append((t1,t2))
+        t_intervall.append((t2,t1))
         x_std = std_values.Profiles_Velocity_X.std()
         y_std = std_values.Profiles_Velocity_Y.std()
         z1_std = std_values.Profiles_Velocity_Z1.std()
